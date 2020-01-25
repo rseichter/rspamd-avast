@@ -19,12 +19,15 @@ limitations under the License.
 -- This module contains Avast antivirus access functions
 --]]
 
-local AVAST_SOCKET = '/run/avast/scan.sock'
-local N = 'avast'
+local function starts_with(string, prefix)
+    return string and string:sub(1, #prefix) == prefix
+end
 
-package.cpath = '/usr/lib/x86_64-linux-gnu/lua/5.1/?.so;' .. package.cpath
+local MODULES_PATH_PREFIX = '/usr/lib/x86_64-linux-gnu/lua/5.1/?.so;'
+if not starts_with(package.cpath, MODULES_PATH_PREFIX) then
+    package.cpath = MODULES_PATH_PREFIX .. package.cpath
+end
 local sock = assert(require 'socket.unix'())
-
 local common = require 'lua_scanners/common'
 local lua_util = require 'lua_util'
 local rspamd_logger = require 'rspamd_logger'
@@ -42,6 +45,9 @@ end
 local function _warn(message)
     rspamd_logger.err(message)
 end
+
+local AVAST_SOCKET = '/run/avast/scan.sock'
+local N = 'avast'
 
 local function avast_config(opts)
     local conf = {
@@ -133,10 +139,6 @@ end
 local function avast_request(line)
     _debug('>> ' .. line)
     assert(sock:send(line .. '\r\n'))
-end
-
-local function starts_with(string, prefix)
-    return string and string:sub(1, #prefix) == prefix
 end
 
 local function scan_greeting(line)
@@ -239,8 +241,14 @@ local function save_content(content, digest)
     return file_name
 end
 
+local function _debug_env()
+    _debug(string.format('package.path: %s', package.path))
+    _debug(string.format('package.cpath: %s', package.cpath))
+end
+
 local function avast_check(task, content, digest, rule)
     _debug('Entering avast_check()')
+    _debug_env()
     if not avast_connect(AVAST_SOCKET) then
         return
     end
