@@ -52,7 +52,6 @@ end
 local function avast_configuration(opts)
     local conf = {
         detection_category = 'virus',
-        log_clean = true,
         message = '${SCANNER}: virus found: "${VIRUS}"',
         name = N,
         scan_image_mime = false,
