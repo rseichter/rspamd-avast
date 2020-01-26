@@ -1,11 +1,12 @@
 # avast.lua
 
-Copyright © 2020 Ralph Seichter
+Copyright © 2020 Ralph Seichter. Sponsored by [sys4 AG](https://sys4.de/).
 
 ## Description
 
-[Rspamd](https://www.rspamd.com/) antivirus extension for the [Avast](https://www.avast.com/de-de/index#mac)
-virus scanner. Tested with Rspamd 2.2 and Avast 3.0.3.
+[avast.lua](https://github.com/rseichter/rspamd-avast) is a [Rspamd](https://www.rspamd.com/) antivirus extension
+module for the [Avast](https://www.avast.com/de-de/index#mac) virus scanner, written in [Lua](https://www.lua.org).
+The module was tested with Rspamd 2.2 and Avast 3.0.3.
 
 ## License
 
@@ -17,9 +18,9 @@ avast.lua requires [lua-socket](http://w3.impa.br/~diego/software/luasocket/home
 to be found in `/usr/lib/x86_64-linux-gnu/lua/5.1/`. For Debian 10 you can use `apt install lua-socket` to install
 the necessary package.
 
-Avast is expected to listen on the UNIX Domain Socket `/run/avast/scan.sock`. As Avast currently does not support
-network sockets, the virus scanner must run on the same machine as Rspamd. Ensure that the domain socket allows R/W
-access for the Rspamd process.
+Avast is expected to listen on the UNIX Domain Socket `/run/avast/scan.sock`. As Avast does not support network
+sockets as of January 2020, the virus scanner must run on the same machine as Rspamd. Please ensure that the domain
+socket allows R/W access for the Rspamd process.
 
 ## Installation
 
