@@ -6,7 +6,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-	http://www.apache.org/licenses/LICENSE-2.0
+    http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -44,11 +44,11 @@ local function _error(message)
 end
 
 local function _debug(message)
-    rspamd_logger.err(message)
+    rspamd_logger.debug(message)
 end
 
 local function _warn(message)
-    rspamd_logger.err(message)
+    rspamd_logger.warn(message)
 end
 
 local function avast_configuration(opts)
@@ -155,9 +155,9 @@ local function scan_path(path)
             if 'E' == s then
                 _error(string.format('Scanning %s failed: %s', path, info))
             elseif 'L' == s then
-				if starts_with(info, '0 ') then
-					info = info:sub(3)
-				end
+                if starts_with(info, '0 ') then
+                    info = info:sub(3)
+                end
                 scan_results[info] = true
             elseif '+' ~= s then
                 _error('Unexpected status: ' .. status)
@@ -215,8 +215,8 @@ local function avast_check(task, content, digest, rule)
         end
         delete_if_exists(content_tmpfile)
     end
-	_debug('Closing socket')
-	assert(socket:close())
+    _debug('Closing socket')
+    assert(socket:close())
     _debug('Exiting avast_check()')
 end
 
