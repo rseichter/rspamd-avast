@@ -2,6 +2,8 @@
 
 Copyright © 2020 Ralph Seichter
 
+Sponsored by sys4 AG (https://sys4.de/)
+
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -13,9 +15,9 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-]]
+]]--
 
---[[
+--[[[
 -- @module avast
 -- This module contains Avast antivirus access functions
 --]]
@@ -45,10 +47,6 @@ end
 
 local function _debug(message)
     rspamd_logger.debug(message)
-end
-
-local function _warn(message)
-    rspamd_logger.warn(message)
 end
 
 local function avast_configuration(opts)
@@ -130,7 +128,7 @@ local function scan_path(path)
     local scan_results = {}
     local line = receive_from_avast(5)
     if not is_avast_greeting(line) then
-        _error(string.format('Unexpected response: %s', line))
+        _error('Unexpected response: ' .. line)
         return scan_results
     end
     send_to_avast('SCAN ' .. path)
@@ -180,8 +178,12 @@ local function delete_if_exists(file_name)
 end
 
 local function save_in_tmpfile(content, digest)
-    file_name = string.format('/tmp/%s.tmp', digest)
-    status = delete_if_exists(file_name)
+    local tmpdir = os.getenv('TMPDIR')
+    if not tmpdir then
+        tmpdir = '/tmp'
+    end
+    local file_name = string.format('%s/%s.tmp', tmpdir, digest)
+    local status = delete_if_exists(file_name)
     if not status then
         return nil
     end
@@ -210,7 +212,6 @@ local function avast_check(task, content, digest, rule)
     if content_tmpfile then
         local scan_results = scan_path(content_tmpfile)
         for virus_name, _ in pairs(scan_results) do
-            _warn('Virus found: ' .. virus_name)
             common.yield_result(task, rule, virus_name)
         end
         delete_if_exists(content_tmpfile)
