@@ -132,7 +132,7 @@ local function scan_path(path)
         else
             local sr = scan_result(line)
             if not sr then
-                rspamd_logger.err('Unexpected response: ' .. line)
+                rspamd_logger.err(string.format('Unexpected response: %s', line))
                 return scan_results
             end
             local path, status, info = parse_scan_result(sr)
@@ -149,7 +149,7 @@ local function scan_path(path)
                 end
                 scan_results[info] = true
             elseif '+' ~= s then
-                rspamd_logger.err('Unexpected status: ' .. status)
+                rspamd_logger.err(string.format('Unexpected status: %s', status))
             end
         end
     end
