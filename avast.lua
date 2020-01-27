@@ -44,6 +44,7 @@ local socket
 local function avast_configuration(opts)
     local conf = {
         detection_category = 'virus',
+        log_clean = false,
         message = '${SCANNER}: virus found: "${VIRUS}"',
         name = N,
         scan_image_mime = false,
@@ -119,8 +120,7 @@ local function scan_path(path)
     local scan_results = {}
     local line = receive_from_avast(5)
     if not is_avast_greeting(line) then
-        rspamd_logger.err('Unexpected response: ' .. line)
-        return scan_results
+        return { error = 'Avast greeting expected' }
     end
     send_to_avast('SCAN ' .. path)
     while true do
@@ -132,13 +132,11 @@ local function scan_path(path)
         else
             local sr = scan_result(line)
             if not sr then
-                rspamd_logger.err(string.format('Unexpected response: %s', line))
-                return scan_results
+                return { error = string.format('Unexpected response: %s', line) }
             end
             local path, status, info = parse_scan_result(sr)
             if not status then
-                rspamd_logger.err('Scan result contains no status')
-                return scan_results
+                return { error = 'Scan result contains no status' }
             end
             s = status:sub(2, 2)
             if 'E' == s then
@@ -149,7 +147,7 @@ local function scan_path(path)
                 end
                 scan_results[info] = true
             elseif '+' ~= s then
-                rspamd_logger.err(string.format('Unexpected status: %s', status))
+                return { error = string.format('Unexpected status: %s', status) }
             end
         end
     end
@@ -186,7 +184,6 @@ local function save_in_tmpfile(content, digest)
 end
 
 local function avast_check(task, content, digest, rule)
-    rspamd_logger.debug('Entering avast_check()')
     socket = assert(require 'socket.unix'())
     rspamd_logger.debug('Connecting to socket ' .. DEFAULT_SOCKET)
     local status, err = pcall(function()
@@ -202,14 +199,19 @@ local function avast_check(task, content, digest, rule)
     local content_tmpfile = save_in_tmpfile(content, digest)
     if content_tmpfile then
         local scan_results = scan_path(content_tmpfile)
-        for virus_name, _ in pairs(scan_results) do
-            common.yield_result(task, rule, virus_name)
+        if type(scan_results.error) == 'string' then
+            common.yield_result(task, rule, scan_results.error, 0.0, 'fail')
+        elseif next(scan_results) then
+            for virus_name, _ in pairs(scan_results) do
+                common.yield_result(task, rule, virus_name)
+            end
+        else
+            common.log_clean(task, rule)
         end
         delete_if_exists(content_tmpfile)
     end
     rspamd_logger.debug('Closing socket')
     assert(socket:close())
-    rspamd_logger.debug('Exiting avast_check()')
 end
 
 return {
