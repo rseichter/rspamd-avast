@@ -41,14 +41,6 @@ local rspamd_text = require 'rspamd_text'
 local rspamd_util = require 'rspamd_util'
 local socket
 
-local function _error(message)
-    rspamd_logger.err(message)
-end
-
-local function _debug(message)
-    rspamd_logger.debug(message)
-end
-
 local function avast_configuration(opts)
     local conf = {
         detection_category = 'virus',
@@ -76,13 +68,13 @@ local function receive_from_avast(timeout)
     assert(socket:settimeout(timeout))
     local line = socket:receive()
     if line then
-        _debug('<< ' .. line)
+        rspamd_logger.debug('<< ' .. line)
     end
     return line
 end
 
 local function send_to_avast(line)
-    _debug('>> ' .. line)
+    rspamd_logger.debug('>> ' .. line)
     assert(socket:send(line .. '\r\n'))
 end
 
@@ -108,7 +100,7 @@ end
 local function parse_scan_result(line)
     local tab1 = line:find('\t')
     if not tab1 then
-        _error('No TAB separator found')
+        rspamd_logger.err('No TAB separator found')
         return nil
     end
     local path, status, info
@@ -127,7 +119,7 @@ local function scan_path(path)
     local scan_results = {}
     local line = receive_from_avast(5)
     if not is_avast_greeting(line) then
-        _error('Unexpected response: ' .. line)
+        rspamd_logger.err('Unexpected response: ' .. line)
         return scan_results
     end
     send_to_avast('SCAN ' .. path)
@@ -140,24 +132,24 @@ local function scan_path(path)
         else
             local sr = scan_result(line)
             if not sr then
-                _error('Unexpected response: ' .. line)
+                rspamd_logger.err('Unexpected response: ' .. line)
                 return scan_results
             end
             local path, status, info = parse_scan_result(sr)
             if not status then
-                _error('Scan result contains no status')
+                rspamd_logger.err('Scan result contains no status')
                 return scan_results
             end
             s = status:sub(2, 2)
             if 'E' == s then
-                _error(string.format('Scanning %s failed: %s', path, info))
+                rspamd_logger.err(string.format('Scanning %s failed: %s', path, info))
             elseif 'L' == s then
                 if starts_with(info, '0 ') then
                     info = info:sub(3)
                 end
                 scan_results[info] = true
             elseif '+' ~= s then
-                _error('Unexpected status: ' .. status)
+                rspamd_logger.err('Unexpected status: ' .. status)
             end
         end
     end
@@ -168,7 +160,7 @@ local function delete_if_exists(file_name)
     if rspamd_util.file_exists(file_name) then
         status, err = rspamd_util.unlink(file_name)
         if not status then
-            _error(string.format('Cannot delete %s: %s', file_name, err))
+            rspamd_logger.err(string.format('Cannot delete %s: %s', file_name, err))
         end
         return status
     else
@@ -187,21 +179,21 @@ local function save_in_tmpfile(content, digest)
         return nil
     end
     if not content:save_in_file(file_name) then
-        _error('Cannot write to ' .. file_name)
+        rspamd_logger.err('Cannot write to ' .. file_name)
         return nil
     end
     return file_name
 end
 
 local function avast_check(task, content, digest, rule)
-    _debug('Entering avast_check()')
+    rspamd_logger.debug('Entering avast_check()')
     socket = assert(require 'socket.unix'())
-    _debug('Connecting to socket ' .. DEFAULT_SOCKET)
+    rspamd_logger.debug('Connecting to socket ' .. DEFAULT_SOCKET)
     local status, err = pcall(function()
         assert(socket:connect(DEFAULT_SOCKET))
     end)
     if not status then
-        _error(err)
+        rspamd_logger.err(err)
         return
     end
     if type(content) == 'string' then
@@ -215,9 +207,9 @@ local function avast_check(task, content, digest, rule)
         end
         delete_if_exists(content_tmpfile)
     end
-    _debug('Closing socket')
+    rspamd_logger.debug('Closing socket')
     assert(socket:close())
-    _debug('Exiting avast_check()')
+    rspamd_logger.debug('Exiting avast_check()')
 end
 
 return {
