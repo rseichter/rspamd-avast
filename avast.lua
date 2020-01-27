@@ -22,7 +22,6 @@ limitations under the License.
 -- This module contains Avast antivirus access functions
 --]]
 
-local DEFAULT_SOCKET = '/run/avast/scan.sock'
 local N = 'avast'
 
 local function starts_with(string, prefix)
@@ -49,7 +48,8 @@ local function avast_configuration(opts)
         name = N,
         scan_image_mime = false,
         scan_mime_parts = true,
-        scan_text_mime = true
+        scan_text_mime = true,
+        socket = '/run/avast/scan.sock'
     }
     conf = lua_util.override_defaults(conf, opts)
     if not conf.prefix then
@@ -185,9 +185,9 @@ end
 
 local function avast_check(task, content, digest, rule)
     socket = assert(require 'socket.unix'())
-    rspamd_logger.debug('Connecting to socket ' .. DEFAULT_SOCKET)
+    rspamd_logger.err('Connecting to socket ' .. rule.socket)
     local status, err = pcall(function()
-        assert(socket:connect(DEFAULT_SOCKET))
+        assert(socket:connect(rule.socket))
     end)
     if not status then
         rspamd_logger.err(err)

@@ -30,7 +30,11 @@ socket allows R/W access for the Rspamd process.
 ```
 avast {
   type = 'avast';
-  # Force this action if any virus is found (default unset: no action is forced)
+  # Avast socket path
+  #socket = '/run/avast/scan.sock';
+  # Log clean files?
+  #log_clean = false;
+  # Force this action if any virus is found (default: unset)
   action = 'reject';
 }
 ```
