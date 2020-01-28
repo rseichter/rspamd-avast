@@ -24,15 +24,6 @@ limitations under the License.
 
 local N = 'avast'
 
-local function starts_with(string, prefix)
-    return string and string:sub(1, #prefix) == prefix
-end
-
-local CPATH_PREFIX = '/usr/lib/x86_64-linux-gnu/lua/5.1/?.so;'
-if not starts_with(package.cpath, CPATH_PREFIX) then
-    package.cpath = CPATH_PREFIX .. package.cpath
-end
-
 local common = require 'lua_scanners/common'
 local lua_util = require 'lua_util'
 local rspamd_logger = require 'rspamd_logger'
@@ -42,6 +33,7 @@ local socket
 
 local function avast_configuration(opts)
     local conf = {
+        cpath_prefix = '/usr/lib/x86_64-linux-gnu/lua/5.1/?.so',
         detection_category = 'virus',
         log_clean = false,
         message = '${SCANNER}: virus found: "${VIRUS}"',
@@ -83,6 +75,10 @@ end
 local function send_to_avast(line)
     rspamd_logger.debug('>> ' .. line)
     assert(socket:send(line .. '\r\n'))
+end
+
+local function starts_with(string, prefix)
+    return string and string:sub(1, #prefix) == prefix
 end
 
 local function is_avast_greeting(s)
@@ -185,7 +181,19 @@ local function save_in_tmpfile(content, digest, rule)
     return file_name
 end
 
+local function adjust_cpath(prefix)
+    if prefix then
+        if prefix:sub(#prefix) ~= ';' then
+            prefix = prefix .. ';'
+        end
+        if not starts_with(package.cpath, prefix) then
+            package.cpath = prefix .. package.cpath
+        end
+    end
+end
+
 local function avast_check(task, content, digest, rule)
+    adjust_cpath(rule.cpath_prefix)
     socket = assert(require 'socket.unix'())
     rspamd_logger.err('Connecting to socket ' .. rule.socket)
     local status, err = pcall(function()
