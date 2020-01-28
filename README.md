@@ -18,9 +18,9 @@ avast.lua requires [lua-socket](http://w3.impa.br/~diego/software/luasocket/home
 to be found in `/usr/lib/x86_64-linux-gnu/lua/5.1/`. For Debian 10 you can use `apt install lua-socket` to install
 the necessary package.
 
-Avast is expected to listen on the UNIX Domain Socket `/run/avast/scan.sock`. As Avast does not support network
-sockets as of January 2020, the virus scanner must run on the same machine as Rspamd. Please ensure that the domain
-socket allows R/W access for the Rspamd process.
+As of January 2020, Avast only supports UNIX Domain Sockets, so the virus scanner must run on the same machine
+as Rspamd. Please ensure that the domain socket allows R/W access for the Rspamd process and that you set the
+socket path in your `antivirus.conf` (the default value is `/run/avast/scan.sock`).
 
 ## Installation
 
@@ -32,7 +32,7 @@ avast {
   type = 'avast';
   # Avast socket path
   #socket = '/run/avast/scan.sock';
-  # Log clean files?
+  # Log clean files as well
   #log_clean = false;
   # Force this action if any virus is found (default: unset)
   action = 'reject';
