@@ -16,9 +16,8 @@ Apache License 2.0, see license file for [details](LICENSE).
 
 avast.lua requires [lua-socket](http://w3.impa.br/~diego/software/luasocket/home.html) version 3. For Debian 10 you
 can use `apt install lua-socket` to install the necessary package. If this C-module is _not_ installed in Rspamd's
-own library path, you have to manually set the `cpath_prefix` parameter or avast.lua won't work. See the
-[Lua package.loaders](https://www.lua.org/manual/5.1/manual.html#pdf-package.loaders) for a detailed syntax
-description.
+own library path, you have to manually set the `cpath_prefix` parameter or avast.lua won't work. See Lua's
+[package.loaders](https://www.lua.org/manual/5.1/manual.html#pdf-package.loaders) for a detailed syntax description.
 
 As of January 2020, Avast only supports UNIX Domain Sockets, so the virus scanner must run on the same machine
 as Rspamd. Please ensure that the domain socket allows R/W access for the Rspamd process and that you set the
