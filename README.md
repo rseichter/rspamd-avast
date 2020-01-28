@@ -20,7 +20,8 @@ the necessary package.
 
 As of January 2020, Avast only supports UNIX Domain Sockets, so the virus scanner must run on the same machine
 as Rspamd. Please ensure that the domain socket allows R/W access for the Rspamd process and that you set the
-socket path in your `antivirus.conf` (the default value is `/run/avast/scan.sock`).
+socket path in your `antivirus.conf` (the default value is `/run/avast/scan.sock`). The `tmpdir` parameter defaults
+to the value of the TMPDIR environment variable (if available) or `/tmp`.
 
 ## Installation
 
@@ -32,6 +33,8 @@ avast {
   type = 'avast';
   # Avast socket path
   #socket = '/run/avast/scan.sock';
+  # Message content is temporarily stored in this directory
+  #tmpdir = '/tmp';
   # Log clean files as well
   #log_clean = false;
   # Force this action if any virus is found (default: unset)

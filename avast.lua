@@ -62,6 +62,12 @@ local function avast_configuration(opts)
             conf.log_prefix = string.format('%s (%s)', conf.name, conf.type)
         end
     end
+    if not conf.tmpdir then
+        conf.tmpdir = os.getenv('TMPDIR')
+        if not conf.tmpdir then
+            conf.tmpdir = '/tmp'
+        end
+    end
     return conf
 end
 
@@ -166,12 +172,8 @@ local function delete_if_exists(file_name)
     end
 end
 
-local function save_in_tmpfile(content, digest)
-    local tmpdir = os.getenv('TMPDIR')
-    if not tmpdir then
-        tmpdir = '/tmp'
-    end
-    local file_name = string.format('%s/%s.tmp', tmpdir, digest)
+local function save_in_tmpfile(content, digest, rule)
+    local file_name = string.format('%s/%s.tmp', rule.tmpdir, digest)
     local status = delete_if_exists(file_name)
     if not status then
         return nil
@@ -196,7 +198,7 @@ local function avast_check(task, content, digest, rule)
     if type(content) == 'string' then
         content = rspamd_text.fromstring(content)
     end
-    local content_tmpfile = save_in_tmpfile(content, digest)
+    local content_tmpfile = save_in_tmpfile(content, digest, rule)
     if content_tmpfile then
         local scan_results = scan_path(content_tmpfile)
         if type(scan_results.error) == 'string' then
