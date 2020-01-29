@@ -195,12 +195,13 @@ end
 local function avast_check(task, content, digest, rule)
     adjust_cpath(rule.cpath_prefix)
     socket = assert(require 'socket.unix'())
-    rspamd_logger.err('Connecting to socket ' .. rule.socket)
+    rspamd_logger.debug('Connecting to socket ' .. rule.socket)
     local status, err = pcall(function()
         assert(socket:connect(rule.socket))
     end)
     if not status then
-        rspamd_logger.err(err)
+        local message = string.format('Cannot connect to socket %s: %s', rule.socket, err)
+        common.yield_result(task, rule, message, 0.0, 'fail')
         return
     end
     if type(content) == 'string' then
